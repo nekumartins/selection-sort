@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Selection Sort Visualization</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: #1a1a1a;
+        color: #ffffff;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        text-align: center;
+        max-width: 800px;
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 40px;
+        font-weight: 300;
+        letter-spacing: 1px;
+        color: #ffffff;
+      }
+
+      .array-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 40px 0;
+        gap: 15px;
+      }
+
+      .array-element {
+        width: 80px;
+        height: 80px;
+        background: #2a2a2a;
+        border: 2px solid #404040;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 500;
+        transition: all 0.4s ease;
+        color: #ffffff;
+      }
+
+      .array-element.current {
+        background: #ff4444;
+        border-color: #ff6666;
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+      }
+
+      .array-element.minimum {
+        background: #44aa44;
+        border-color: #66cc66;
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(68, 170, 68, 0.4);
+      }
+
+      .array-element.sorted {
+        background: #6666aa;
+        border-color: #8888cc;
+        color: #ffffff;
+      }
+
+      .step-info {
+        background: #2a2a2a;
+        border: 1px solid #404040;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        font-size: 1.1rem;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+      }
+
+      .controls {
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      button {
+        padding: 12px 24px;
+        font-size: 1rem;
+        border: 1px solid #404040;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #2a2a2a;
+        color: #ffffff;
+        font-weight: 400;
+      }
+
+      button:hover:not(:disabled) {
+        background: #333333;
+        border-color: #555555;
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .legend {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin: 25px 0;
+        flex-wrap: wrap;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.95rem;
+        color: #cccccc;
+      }
+
+      .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 1px solid #404040;
+      }
+
+      .legend-color.unsorted {
+        background: #2a2a2a;
+      }
+
+      .legend-color.current {
+        background: #ff4444;
+      }
+
+      .legend-color.minimum {
+        background: #44aa44;
+      }
+
+      .legend-color.sorted {
+        background: #6666aa;
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2rem;
+        }
+
+        .array-element {
+          width: 60px;
+          height: 60px;
+          font-size: 1.4rem;
+        }
+
+        button {
+          padding: 10px 18px;
+          font-size: 0.9rem;
+        }
+
+        .legend {
+          gap: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Selection Sort Visualization</h1>
+
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color unsorted"></div>
+          <span>Unsorted</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color current"></div>
+          <span>Current</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color minimum"></div>
+          <span>Minimum</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color sorted"></div>
+          <span>Sorted</span>
+        </div>
+      </div>
+
+      <div class="array-container" id="arrayContainer">
+        <!-- Array elements will be generated here -->
+      </div>
+
+      <div class="step-info" id="stepInfo">
+        Click "Start Demo" to begin the sorting process
+      </div>
+
+      <div class="controls">
+        <button onclick="startDemo()">Start Demo</button>
+        <button onclick="nextStep()" id="nextBtn" disabled>Next Step</button>
+        <button onclick="autoPlay()" id="autoBtn">Auto Play</button>
+        <button onclick="resetDemo()">Reset</button>
+        <button onclick="generateNewArray()">New Array</button>
+      </div>
+    </div>
+
+    <script>
+      // Demo variables
+      let originalArray = [34, 12, 7, 8, 19];
+      let workingArray = [];
+      let currentStep = 0;
+      let isRunning = false;
+      let isAutoPlaying = false;
+      let autoPlayInterval;
+      let steps = [];
+
+      function generateSteps() {
+        steps = [];
+        let arr = [...workingArray];
+        let n = arr.length;
+
+        for (let i = 0; i < n - 1; i++) {
+          let minIdx = i;
+          steps.push({
+            type: "start_iteration",
+            i: i,
+            minIdx: minIdx,
+            description: `Starting iteration ${
+              i + 1
+            }. Looking for minimum in positions ${i} to ${n - 1}.`,
+            array: [...arr],
+          });
+
+          for (let j = i + 1; j < n; j++) {
+            steps.push({
+              type: "compare",
+              i: i,
+              j: j,
+              minIdx: minIdx,
+              description: `Comparing arr[${j}] = ${arr[j]} with current minimum arr[${minIdx}] = ${arr[minIdx]}`,
+              array: [...arr],
+            });
+
+            if (arr[j] < arr[minIdx]) {
+              minIdx = j;
+              steps.push({
+                type: "new_min",
+                i: i,
+                j: j,
+                minIdx: minIdx,
+                description: `New minimum found! arr[${j}] = ${arr[j]} is smaller than previous minimum.`,
+                array: [...arr],
+              });
+            }
+          }
+
+          if (minIdx !== i) {
+            steps.push({
+              type: "swap",
+              i: i,
+              minIdx: minIdx,
+              description: `Swapping arr[${i}] = ${arr[i]} with arr[${minIdx}] = ${arr[minIdx]}`,
+              array: [...arr],
+            });
+            [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+            steps.push({
+              type: "after_swap",
+              i: i,
+              minIdx: minIdx,
+              description: `Swap complete. New array state.`,
+              array: [...arr],
+            });
+          } else {
+            steps.push({
+              type: "no_swap",
+              i: i,
+              minIdx: minIdx,
+              description: `No swap needed. arr[${i}] = ${arr[i]} is already the minimum.`,
+              array: [...arr],
+            });
+          }
+
+          steps.push({
+            type: "iteration_complete",
+            i: i,
+            description: `Position ${i} is now sorted. Element ${arr[i]} is in its final position.`,
+            array: [...arr],
+          });
+        }
+
+        steps.push({
+          type: "complete",
+          description:
+            "Sorting complete! All elements are now in sorted order.",
+          array: [...arr],
+        });
+      }
+
+      function renderArray() {
+        const container = document.getElementById("arrayContainer");
+        container.innerHTML = "";
+
+        workingArray.forEach((value, index) => {
+          const element = document.createElement("div");
+          element.className = "array-element";
+          element.textContent = value;
+          element.id = `element-${index}`;
+          container.appendChild(element);
+        });
+      }
+
+      function updateVisualization(step) {
+        // Update working array if step has array data
+        if (step.array) {
+          workingArray = [...step.array];
+          renderArray();
+        }
+
+        // Clear all highlights
+        document.querySelectorAll(".array-element").forEach((el) => {
+          el.classList.remove("current", "minimum", "sorted");
+        });
+
+        // Apply highlights based on step
+        if (
+          step.type === "start_iteration" ||
+          step.type === "compare" ||
+          step.type === "new_min"
+        ) {
+          if (step.i !== undefined) {
+            for (let k = 0; k < step.i; k++) {
+              const el = document.getElementById(`element-${k}`);
+              if (el) el.classList.add("sorted");
+            }
+          }
+          if (step.j !== undefined) {
+            const el = document.getElementById(`element-${step.j}`);
+            if (el) el.classList.add("current");
+          }
+          if (step.minIdx !== undefined) {
+            const el = document.getElementById(`element-${step.minIdx}`);
+            if (el) el.classList.add("minimum");
+          }
+        } else if (
+          step.type === "swap" ||
+          step.type === "no_swap" ||
+          step.type === "after_swap"
+        ) {
+          if (step.i !== undefined) {
+            for (let k = 0; k < step.i; k++) {
+              const el = document.getElementById(`element-${k}`);
+              if (el) el.classList.add("sorted");
+            }
+            const currentEl = document.getElementById(`element-${step.i}`);
+            if (currentEl) currentEl.classList.add("current");
+          }
+          if (step.minIdx !== undefined && step.minIdx !== step.i) {
+            const el = document.getElementById(`element-${step.minIdx}`);
+            if (el) el.classList.add("minimum");
+          }
+        } else if (step.type === "iteration_complete") {
+          if (step.i !== undefined) {
+            for (let k = 0; k <= step.i; k++) {
+              const el = document.getElementById(`element-${k}`);
+              if (el) el.classList.add("sorted");
+            }
+          }
+        } else if (step.type === "complete") {
+          document.querySelectorAll(".array-element").forEach((el) => {
+            el.classList.add("sorted");
+          });
+        }
+      }
+
+      function startDemo() {
+        stopAutoPlay();
+        workingArray = [...originalArray];
+        generateSteps();
+        currentStep = 0;
+        isRunning = true;
+        document.getElementById("nextBtn").disabled = false;
+        renderArray();
+
+        if (steps.length > 0) {
+          updateVisualization(steps[0]);
+          document.getElementById("stepInfo").textContent =
+            steps[0].description;
+        }
+      }
+
+      function nextStep() {
+        if (currentStep < steps.length - 1) {
+          currentStep++;
+          const step = steps[currentStep];
+
+          updateVisualization(step);
+          document.getElementById("stepInfo").textContent = step.description;
+
+          if (currentStep === steps.length - 1) {
+            document.getElementById("nextBtn").disabled = true;
+            stopAutoPlay();
+          }
+        }
+      }
+
+      function autoPlay() {
+        if (!isRunning) {
+          startDemo();
+        }
+
+        if (isAutoPlaying) {
+          stopAutoPlay();
+        } else {
+          isAutoPlaying = true;
+          document.getElementById("autoBtn").textContent = "Stop Auto";
+          document.getElementById("nextBtn").disabled = true;
+
+          autoPlayInterval = setInterval(() => {
+            if (currentStep < steps.length - 1) {
+              nextStep();
+            } else {
+              stopAutoPlay();
+            }
+          }, 1500);
+        }
+      }
+
+      function stopAutoPlay() {
+        if (autoPlayInterval) {
+          clearInterval(autoPlayInterval);
+          autoPlayInterval = null;
+        }
+        isAutoPlaying = false;
+        document.getElementById("autoBtn").textContent = "Auto Play";
+        if (isRunning && currentStep < steps.length - 1) {
+          document.getElementById("nextBtn").disabled = false;
+        }
+      }
+
+      function resetDemo() {
+        stopAutoPlay();
+        workingArray = [...originalArray];
+        currentStep = 0;
+        isRunning = false;
+        steps = [];
+        document.getElementById("nextBtn").disabled = true;
+        document.getElementById("stepInfo").textContent =
+          'Click "Start Demo" to begin the sorting process';
+        renderArray();
+      }
+
+      function generateNewArray() {
+        stopAutoPlay();
+        originalArray = [];
+        for (let i = 0; i < 5; i++) {
+          originalArray.push(Math.floor(Math.random() * 50) + 1);
+        }
+        workingArray = [...originalArray];
+        currentStep = 0;
+        isRunning = false;
+        steps = [];
+        document.getElementById("nextBtn").disabled = true;
+        document.getElementById("stepInfo").textContent =
+          'Click "Start Demo" to begin the sorting process';
+        renderArray();
+      }
+
+      // Initialize
+      workingArray = [...originalArray];
+      renderArray();
+    </script>
+  </body>
+</html>
+ig
